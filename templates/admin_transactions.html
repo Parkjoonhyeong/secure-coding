@@ -1,0 +1,14 @@
+{% extends 'base.html' %} {% block title %}전체 거래 내역{% endblock %} {% block
+content %}
+<div class="container">
+  <h1>📄 전체 거래 내역</h1>
+  <ul>
+    {% for t in transactions %}
+    <li>💸 {{ t.sender_id }} → {{ t.receiver_id }}: {{ t.amount }} 포인트</li>
+    {% else %}
+    <li>거래 내역이 없습니다.</li>
+    {% endfor %}
+  </ul>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn">← 관리자 대시보드로</a>
+</div>
+{% endblock %}

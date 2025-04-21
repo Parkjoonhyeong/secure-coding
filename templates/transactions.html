@@ -1,0 +1,26 @@
+{% extends 'base.html' %} {% block title %}거래 내역{% endblock %} {% block
+content %}
+<div class="container">
+  <h1>📜 내 거래 내역</h1>
+
+  <h2>보낸 송금</h2>
+  <ul>
+    {% for t in sent %}
+    <li>{{ t.amount }} 포인트 → 사용자 ID: {{ t.receiver_id }}</li>
+    {% else %}
+    <li>보낸 거래 내역 없음</li>
+    {% endfor %}
+  </ul>
+
+  <h2>받은 송금</h2>
+  <ul>
+    {% for t in received %}
+    <li>{{ t.amount }} 포인트 ← 사용자 ID: {{ t.sender_id }}</li>
+    {% else %}
+    <li>받은 거래 내역 없음</li>
+    {% endfor %}
+  </ul>
+
+  <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
+</div>
+{% endblock %}

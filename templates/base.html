@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+
+  <body>
+    <header class="main-header">
+      <div class="logo">
+        <span>🛒</span>
+        <a href="{{ url_for('index') }}">중고거래 플랫폼</a>
+      </div>
+
+      <nav class="topnav">
+        {% if session.username %}
+        <span class="welcome">환영합니다, {{ session.username }}!</span>
+        {% if session.is_admin %}
+        <a href="{{ url_for('admin_dashboard') }}">관리자 대시보드</a>
+        {% endif %}
+        <a href="{{ url_for('mypage.mypage') }}">마이페이지</a>
+        <a href="{{ url_for('logout') }}">로그아웃</a>
+        <a href="{{ url_for('create_product') }}">상품 등록</a>
+        {% else %}
+        <a href="{{ url_for('login') }}">로그인</a>
+        <a href="{{ url_for('register') }}">회원가입</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    <main class="container">{% block content %}{% endblock %}</main>
+
+    <footer class="footer">
+      <p>&copy; WHS_박준형 중고거래 플랫폼</p>
+    </footer>
+  </body>
+</html>

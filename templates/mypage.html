@@ -1,0 +1,36 @@
+{% extends 'base.html' %} {% block title %}마이페이지{% endblock %} {% block
+content %}
+<h2>👤 내 정보</h2>
+<p><strong>아이디:</strong> {{ user.username }}</p>
+<p><strong>관리자 여부:</strong> {{ '✅' if user.is_admin else '❌' }}</p>
+
+<h2>📦 등록한 상품</h2>
+<ul>
+  {% for p in my_products %}
+  <li>
+    <a href="{{ url_for('product_detail', product_id=p.id) }}">{{ p.name }}</a>
+    - {{ p.description }}
+  </li>
+  {% else %}
+  <li>등록한 상품이 없습니다.</li>
+  {% endfor %}
+</ul>
+
+<h2>💰 보낸 송금</h2>
+<ul>
+  {% for t in sent_transactions %}
+  <li>{{ t.amount }}포인트 → 사용자 ID {{ t.receiver_id }}</li>
+  {% else %}
+  <li>보낸 거래 없음</li>
+  {% endfor %}
+</ul>
+
+<h2>💰 받은 송금</h2>
+<ul>
+  {% for t in received_transactions %}
+  <li>{{ t.amount }}포인트 ← 사용자 ID {{ t.sender_id }}</li>
+  {% else %}
+  <li>받은 거래 없음</li>
+  {% endfor %}
+</ul>
+{% endblock %}

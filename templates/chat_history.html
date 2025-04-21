@@ -1,0 +1,26 @@
+{% extends 'base.html' %} {% block title %}{{ other_user.username }}와의 채팅{%
+endblock %} {% block content %}
+<div class="container">
+  <h1>📨 {{ other_user.username }}와의 채팅 기록</h1>
+  <ul>
+    {% for chat in chats %}
+    <li>
+      <strong
+        >{{ '나' if chat.sender_id == session.user_id else other_user.username
+        }}:</strong
+      >
+      {{ chat.message }}
+    </li>
+    {% else %}
+    <li>채팅 내역이 없습니다.</li>
+    {% endfor %}
+  </ul>
+
+  <div style="margin-top: 1.5rem">
+    <a href="{{ url_for('send_chat', receiver_id=other_user.id) }}" class="btn"
+      >✏️ 메시지 보내기</a
+    >
+    <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
+  </div>
+</div>
+{% endblock %}

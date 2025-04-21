@@ -1,0 +1,29 @@
+{% extends 'base.html' %} {% block title %}상품 수정{% endblock %} {% block
+content %}
+<div class="container">
+  <h1>✏️ 상품 수정</h1>
+  <form method="POST">
+    <label for="name">상품명:</label><br />
+    <input
+      type="text"
+      name="name"
+      id="name"
+      value="{{ product.name }}"
+      required
+    /><br /><br />
+
+    <label for="description">설명:</label><br />
+    <textarea name="description" id="description" rows="4" cols="40">
+{{ product.description }}</textarea
+    ><br /><br />
+
+    <button type="submit" class="btn">수정 완료</button>
+  </form>
+
+  <p style="margin-top: 1rem">
+    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn"
+      >← 상품 상세로</a
+    >
+  </p>
+</div>
+{% endblock %}

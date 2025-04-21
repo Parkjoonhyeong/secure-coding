@@ -1,0 +1,100 @@
+:root {
+  --primary-color: #63c19e;
+  --accent-color: #4caf88;
+  --background-color: #f5faf7;
+  --header-color: #3d6f63;
+  --text-color: #2b3e3a;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Noto Sans KR', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== 헤더 ===== */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 1rem;
+  height: 3rem;
+  background-color: var(--header-color);
+  color: white;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.logo a {
+  text-decoration: none;
+  color: white;
+}
+
+/* ===== 네비게이션 ===== */
+.topnav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.topnav a {
+  color: white !important; /* ✅ 항상 흰색 */
+  font-weight: bold;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid white;
+  border-radius: 6px;
+  text-decoration: none;
+  background-color: transparent;
+}
+
+/* ✅ 마우스 올려도 색상 변경 없음 */
+.topnav a:hover {
+  background-color: transparent;
+  color: white !important;
+  border-color: white;
+}
+
+.welcome {
+  font-size: 0.85rem;
+  color: white;
+  font-weight: 500;
+}
+
+/* ===== 버튼 ===== */
+button,
+.btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover,
+.btn:hover {
+  background-color: var(--accent-color);
+}
+
+/* ===== 메인 컨텐츠 ===== */
+.container {
+  margin: 2rem 1.5rem;
+}
+
+/* ===== 푸터 ===== */
+.footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}

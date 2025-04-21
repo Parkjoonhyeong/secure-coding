@@ -1,0 +1,38 @@
+{% extends 'base.html' %} {% block title %}{{ product.name }} - 상세정보{%
+endblock %} {% block content %}
+<div class="container">
+  <h1>{{ product.name }}</h1>
+  <p><strong>설명:</strong> {{ product.description }}</p>
+  <p><strong>판매자:</strong> {{ seller.username }}</p>
+
+  {% if session.user_id == product.seller_id %}
+  <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn"
+    >✏️ 수정</a
+  >
+  <form
+    method="POST"
+    action="{{ url_for('delete_product', product_id=product.id) }}"
+    style="display: inline"
+  >
+    <button
+      type="submit"
+      class="btn"
+      onclick="return confirm('정말 삭제하시겠습니까?');"
+    >
+      🗑 삭제
+    </button>
+  </form>
+  {% else %}
+  <a href="{{ url_for('send_chat', receiver_id=seller.id) }}" class="btn"
+    >💬 메시지 보내기</a
+  >
+  <a href="{{ url_for('transfer', receiver_id=seller.id) }}" class="btn"
+    >💸 포인트 송금</a
+  >
+  {% endif %}
+
+  <div style="margin-top: 1.5rem">
+    <a href="{{ url_for('index') }}" class="btn">← 상품 목록으로</a>
+  </div>
+</div>
+{% endblock %}

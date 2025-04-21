@@ -1,0 +1,20 @@
+{% extends 'base.html' %} {% block title %}상품 등록{% endblock %} {% block
+content %}
+<div class="container">
+  <h1>📦 상품 등록</h1>
+  <form method="POST">
+    <label for="name">상품명:</label><br />
+    <input type="text" id="name" name="name" required /><br /><br />
+
+    <label for="description">설명:</label><br />
+    <textarea id="description" name="description" rows="4" cols="40"></textarea
+    ><br /><br />
+
+    <button type="submit" class="btn">등록</button>
+  </form>
+
+  <p style="margin-top: 1.5rem">
+    <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %} {% block title %}{{ receiver.username }}에게 메시지
+보내기{% endblock %} {% block content %}
+<div class="container">
+  <h1>💬 {{ receiver.username }}에게 메시지 보내기</h1>
+
+  <form method="POST">
+    <textarea
+      name="message"
+      rows="5"
+      cols="50"
+      placeholder="메시지를 입력하세요"
+      required
+    ></textarea
+    ><br /><br />
+    <button type="submit" class="btn">전송</button>
+  </form>
+
+  <div style="margin-top: 1.5rem">
+    <a href="{{ url_for('chat_history', user_id=receiver.id) }}" class="btn"
+      >📨 이전 채팅 보기</a
+    >
+    <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
+  </div>
+</div>
+{% endblock %}

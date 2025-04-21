@@ -1,0 +1,63 @@
+{% extends 'base.html' %} {% block title %}관리자 대시보드{% endblock %} {%
+block content %}
+<div class="container">
+  <h1>🛡 관리자 대시보드</h1>
+
+  <h2>📊 통계</h2>
+  <ul>
+    <li>👥 전체 사용자 수: {{ user_count }}</li>
+    <li>📦 전체 상품 수: {{ product_count }}</li>
+    <li>💰 총 거래 포인트: {{ total_points }} 포인트</li>
+  </ul>
+
+  <h2>👤 사용자 목록</h2>
+  <ul>
+    {% for u in users %}
+    <li>
+      ID: {{ u.id }} | 이름: {{ u.username }} | 관리자: {{ '✅' if u.is_admin
+      else '❌' }} {% if not u.is_admin %}
+      <form
+        method="POST"
+        action="{{ url_for('delete_user', user_id=u.id) }}"
+        style="display: inline"
+      >
+        <button
+          type="submit"
+          class="btn"
+          onclick="return confirm('정말 삭제하시겠습니까?')"
+        >
+          🗑 삭제
+        </button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  <h2>📦 등록 상품</h2>
+  <ul>
+    {% for p in products %}
+    <li>ID: {{ p.id }} | 이름: {{ p.name }} | 판매자 ID: {{ p.seller_id }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>💰 최근 거래 내역 (최근 10건)</h2>
+  <ul>
+    {% for t in transactions %}
+    <li>{{ t.sender_id }} → {{ t.receiver_id }}: {{ t.amount }} 포인트</li>
+    {% else %}
+    <li>거래 내역 없음</li>
+    {% endfor %}
+  </ul>
+
+  <p>
+    <a href="{{ url_for('all_transactions') }}" class="btn"
+      >📜 전체 거래 내역 보기</a
+    >
+  </p>
+
+  <p style="margin-top: 2rem">
+    <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
+  </p>
+</div>
+{% endblock %}

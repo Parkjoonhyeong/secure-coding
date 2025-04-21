@@ -1,0 +1,22 @@
+{% extends 'base.html' %} {% block title %}{{ receiver.username }}에게 송금{%
+endblock %} {% block content %}
+<div class="container">
+  <h1>💸 {{ receiver.username }}에게 포인트 송금</h1>
+
+  <form method="POST">
+    <label for="amount">송금할 금액:</label><br />
+    <input
+      type="number"
+      name="amount"
+      id="amount"
+      min="1"
+      required
+    /><br /><br />
+    <button type="submit" class="btn">송금</button>
+  </form>
+
+  <p style="margin-top: 1rem">
+    <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
+  </p>
+</div>
+{% endblock %}
