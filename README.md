@@ -34,17 +34,18 @@
 
 ### 2. 프로젝트 클론
 
-````bash
+```bash
 git clone https://github.com/Parkjoonhyeong/secure-coding.git
 cd secure-coding
-
+```
 
 ### 3. 가상환경 생성 및 의존성 설치
+
 ```bash
 python -m venv venv
 venv\Scripts\activate        # macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
-````
+```
 
 ### 4. 인증서 생성 (HTTPS)
 
