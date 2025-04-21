@@ -1,0 +1,47 @@
+{% extends 'base.html' %} {% block title %}신고 관리{% endblock %} {% block
+content %}
+<h2>🚨 신고 내역 관리</h2>
+
+<h3>사용자 신고</h3>
+<ul>
+  {% for report in user_reports %}
+  <li>
+    📌 신고자: {{ report.reporter.username }} → 대상: {{
+    report.target_user.username }} <br />
+    📄 사유: {{ report.reason }}
+    <form
+      method="POST"
+      action="{{ url_for('delete_user_report', report_id=report.id) }}"
+      style="display: inline"
+    >
+      <button type="submit">❌ 삭제</button>
+    </form>
+  </li>
+  {% else %}
+  <li>사용자에 대한 신고가 없습니다.</li>
+  {% endfor %}
+</ul>
+
+<h3>상품 신고</h3>
+<ul>
+  {% for report in product_reports %}
+  <li>
+    📌 신고자: {{ report.reporter.username }} → 상품: {{
+    report.target_product.name }} (판매자: {{
+    report.target_product.seller.username }}) <br />
+    📄 사유: {{ report.reason }}
+    <form
+      method="POST"
+      action="{{ url_for('delete_product_report', report_id=report.id) }}"
+      style="display: inline"
+    >
+      <button type="submit">❌ 삭제</button>
+    </form>
+  </li>
+  {% else %}
+  <li>상품에 대한 신고가 없습니다.</li>
+  {% endfor %}
+</ul>
+
+<a href="{{ url_for('admin_dashboard') }}">← 관리자 대시보드로</a>
+{% endblock %}

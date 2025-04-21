@@ -1,0 +1,51 @@
+{% extends 'base.html' %} {% block title %}전체 채팅{% endblock %} {% block
+content %}
+<h2>💬 전체 채팅방</h2>
+
+<div
+  id="chat-box"
+  style="
+    border: 1px solid #ccc;
+    padding: 1rem;
+    height: 300px;
+    overflow-y: scroll;
+    background: #f9f9f9;
+  "
+></div>
+
+<form id="chat-form" style="margin-top: 1rem">
+  <input
+    type="text"
+    id="chat-message"
+    placeholder="메시지를 입력하세요"
+    style="width: 80%"
+    required
+  />
+  <button type="submit">보내기</button>
+</form>
+
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  const socket = io()
+
+  const chatBox = document.getElementById('chat-box')
+  const chatForm = document.getElementById('chat-form')
+  const messageInput = document.getElementById('chat-message')
+
+  socket.on('receive_message', function (data) {
+    const messageElement = document.createElement('div')
+    messageElement.textContent = `${data.username}: ${data.message}`
+    chatBox.appendChild(messageElement)
+    chatBox.scrollTop = chatBox.scrollHeight
+  })
+
+  chatForm.addEventListener('submit', function (e) {
+    e.preventDefault()
+    const message = messageInput.value.trim()
+    if (message !== '') {
+      socket.emit('send_message', { message: message })
+      messageInput.value = ''
+    }
+  })
+</script>
+{% endblock %}

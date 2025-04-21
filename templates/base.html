@@ -20,12 +20,16 @@
       <nav class="topnav">
         {% if session.username %}
         <span class="welcome">환영합니다, {{ session.username }}!</span>
+
         {% if session.is_admin %}
         <a href="{{ url_for('admin_dashboard') }}">관리자 대시보드</a>
+        <a href="{{ url_for('manage_reports') }}">신고 관리</a>
         {% endif %}
+
         <a href="{{ url_for('mypage.mypage') }}">마이페이지</a>
-        <a href="{{ url_for('logout') }}">로그아웃</a>
+        <a href="{{ url_for('global_chat') }}">💬 전체 채팅</a>
         <a href="{{ url_for('create_product') }}">상품 등록</a>
+        <a href="{{ url_for('logout') }}">로그아웃</a>
         {% else %}
         <a href="{{ url_for('login') }}">로그인</a>
         <a href="{{ url_for('register') }}">회원가입</a>

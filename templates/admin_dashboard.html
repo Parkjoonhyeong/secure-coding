@@ -1,63 +1,113 @@
 {% extends 'base.html' %} {% block title %}관리자 대시보드{% endblock %} {%
 block content %}
+
 <div class="container">
   <h1>🛡 관리자 대시보드</h1>
 
-  <h2>📊 통계</h2>
-  <ul>
-    <li>👥 전체 사용자 수: {{ user_count }}</li>
-    <li>📦 전체 상품 수: {{ product_count }}</li>
-    <li>💰 총 거래 포인트: {{ total_points }} 포인트</li>
-  </ul>
+  <!-- 💤 휴면 자동 처리 버튼 -->
+  <form method="POST" action="{{ url_for('check_dormant_users') }}">
+    <button
+      class="btn"
+      onclick="return confirm('신고 누적 유저들을 휴면 처리할까요?')"
+    >
+      💤 신고 누적 유저 휴면처리
+    </button>
+  </form>
 
-  <h2>👤 사용자 목록</h2>
-  <ul>
-    {% for u in users %}
-    <li>
-      ID: {{ u.id }} | 이름: {{ u.username }} | 관리자: {{ '✅' if u.is_admin
-      else '❌' }} {% if not u.is_admin %}
-      <form
-        method="POST"
-        action="{{ url_for('delete_user', user_id=u.id) }}"
-        style="display: inline"
-      >
-        <button
-          type="submit"
-          class="btn"
-          onclick="return confirm('정말 삭제하시겠습니까?')"
-        >
-          🗑 삭제
-        </button>
-      </form>
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
+  <!-- 👥 사용자 목록 -->
+  <h2>👥 사용자 목록</h2>
+  <table class="styled-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>이름</th>
+        <th>관리자</th>
+        <th>휴면</th>
+        <th>관리</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ '✅' if u.is_admin else '❌' }}</td>
+        <td>{{ '🛌' if u.is_dormant else '🌐 활성' }}</td>
+        <td>
+          {% if not u.is_admin %}
+          <!-- 🗑 삭제 -->
+          <form
+            method="POST"
+            action="{{ url_for('delete_user', user_id=u.id) }}"
+            style="display: inline"
+          >
+            <button
+              class="btn"
+              onclick="return confirm('정말 삭제하시겠습니까?')"
+            >
+              🗑 삭제
+            </button>
+          </form>
 
-  <h2>📦 등록 상품</h2>
+          {% if not u.is_dormant %}
+          <!-- 🛌 휴면 처리 -->
+          <form
+            method="POST"
+            action="{{ url_for('mark_user_dormant', user_id=u.id) }}"
+            style="display: inline"
+          >
+            <button
+              class="btn"
+              onclick="return confirm('휴면 처리하시겠습니까?')"
+            >
+              🛌 휴면
+            </button>
+          </form>
+          {% else %}
+          <!-- 🔓 휴면 해제 -->
+          <form
+            method="POST"
+            action="{{ url_for('unmark_user_dormant', user_id=u.id) }}"
+            style="display: inline"
+          >
+            <button
+              class="btn"
+              onclick="return confirm('휴면을 해제하시겠습니까?')"
+            >
+              🔓 해제
+            </button>
+          </form>
+          {% endif %} {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- 📦 상품 목록 -->
+  <h2>📦 상품 목록</h2>
   <ul>
     {% for p in products %}
     <li>ID: {{ p.id }} | 이름: {{ p.name }} | 판매자 ID: {{ p.seller_id }}</li>
     {% endfor %}
   </ul>
 
-  <h2>💰 최근 거래 내역 (최근 10건)</h2>
+  <!-- 💰 최근 거래 내역 -->
+  <h2>💰 최근 거래 내역 (10건)</h2>
   <ul>
     {% for t in transactions %}
-    <li>{{ t.sender_id }} → {{ t.receiver_id }}: {{ t.amount }} 포인트</li>
+    <li>{{ t.sender_id }} → {{ t.receiver_id }}: {{ t.amount }}P</li>
     {% else %}
     <li>거래 내역 없음</li>
     {% endfor %}
   </ul>
 
-  <p>
-    <a href="{{ url_for('all_transactions') }}" class="btn"
-      >📜 전체 거래 내역 보기</a
-    >
-  </p>
-
-  <p style="margin-top: 2rem">
-    <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
-  </p>
+  <!-- 기타 링크 -->
+  <a href="{{ url_for('all_transactions') }}" class="btn"
+    >📜 전체 거래 내역 보기</a
+  >
+  <br /><br />
+  <a href="{{ url_for('index') }}" class="btn">← 메인으로</a>
 </div>
+
 {% endblock %}

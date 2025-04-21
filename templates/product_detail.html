@@ -29,6 +29,9 @@ endblock %} {% block content %}
   <a href="{{ url_for('transfer', receiver_id=seller.id) }}" class="btn"
     >💸 포인트 송금</a
   >
+  <a href="{{ url_for('report_product', product_id=product.id) }}" class="btn"
+    >🚨 상품 신고</a
+  >
   {% endif %}
 
   <div style="margin-top: 1.5rem">

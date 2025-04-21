@@ -1,0 +1,28 @@
+{% extends 'base.html' %} {% block title %}신고 내역{% endblock %} {% block
+content %}
+<h2>신고 내역</h2>
+
+<h3>사용자 신고</h3>
+<ul>
+  {% for r in user_reports %}
+  <li>
+    신고자 ID: {{ r.reporter_id }} → 대상 사용자 ID: {{ r.target_user_id }}<br />사유:
+    {{ r.reason }}
+  </li>
+  {% else %}
+  <li>사용자 신고 내역 없음</li>
+  {% endfor %}
+</ul>
+
+<h3>상품 신고</h3>
+<ul>
+  {% for r in product_reports %}
+  <li>
+    신고자 ID: {{ r.reporter_id }} → 상품 ID: {{ r.target_product_id }}<br />사유:
+    {{ r.reason }}
+  </li>
+  {% else %}
+  <li>상품 신고 내역 없음</li>
+  {% endfor %}
+</ul>
+{% endblock %}

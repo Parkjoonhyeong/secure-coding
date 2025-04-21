@@ -2,26 +2,23 @@ from flask import Flask, render_template, redirect, url_for, request, session, f
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from functools import wraps
-from models import db, User, Product, Chat, Transaction
+from flask_socketio import SocketIO, emit
+from models import db, User, Product, Chat, Transaction, Report
 from routes.mypage import mypage_bp
+from datetime import datetime, timedelta
 import os
-
-# Blueprint import
-from routes.mypage import mypage_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secure-coding-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize extensions
 bcrypt = Bcrypt(app)
 db.init_app(app)
-
-# Register Blueprints
+socketio = SocketIO(app)
 app.register_blueprint(mypage_bp)
 
-# ---------------------- AUTH DECORATORS ----------------------
+# 인증 데코레이터
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -31,6 +28,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# 관리자 전용
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -40,7 +38,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ---------------------- ROUTES ----------------------
+
 @app.route('/')
 def index():
     query = request.args.get('q', '')
@@ -69,12 +67,50 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
         if user and bcrypt.check_password_hash(user.password, password):
+            if user.is_dormant:
+                flash("휴면 계정은 로그인할 수 없습니다. 관리자에게 문의하세요.")
+                return redirect(url_for('login'))
             session['user_id'] = user.id
             session['username'] = user.username
             session['is_admin'] = user.is_admin
             return redirect(url_for('index'))
         flash('로그인 실패. 아이디 또는 비밀번호를 확인해주세요.')
     return render_template('login.html')
+
+
+@app.route('/admin/dormant_check', methods=['POST'])
+@admin_required
+def check_dormant_users():
+    threshold = 3
+    since = datetime.utcnow() - timedelta(days=7)
+
+    subquery = db.session.query(
+        Report.target_user_id,
+        db.func.count(Report.id).label("report_count")
+    ).filter(
+        Report.target_user_id != None,
+        Report.created_at >= since
+    ).group_by(Report.target_user_id).subquery()
+
+    flagged_users = db.session.query(User).join(
+        subquery, User.id == subquery.c.target_user_id
+    ).filter(subquery.c.report_count >= threshold).all()
+
+    for user in flagged_users:
+        user.is_dormant = True
+
+    db.session.commit()
+    flash(f"휴면 처리된 유저 수: {len(flagged_users)}명")
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/unmark_dormant/<int:user_id>', methods=['POST'])
+@admin_required
+def unmark_user_dormant(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_dormant = False
+    db.session.commit()
+    flash(f"{user.username} 계정의 휴면이 해제되었습니다.")
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/logout')
 def logout():
@@ -88,20 +124,37 @@ def admin_dashboard():
     users = User.query.all()
     products = Product.query.all()
     transactions = Transaction.query.order_by(Transaction.id.desc()).limit(10).all()
-
     user_count = User.query.count()
     product_count = Product.query.count()
     total_points = db.session.query(db.func.sum(Transaction.amount)).scalar() or 0
+    return render_template('admin_dashboard.html', users=users, products=products,
+                           transactions=transactions, user_count=user_count,
+                           product_count=product_count, total_points=total_points)
 
-    return render_template(
-        'admin_dashboard.html',
-        users=users,
-        products=products,
-        transactions=transactions,
-        user_count=user_count,
-        product_count=product_count,
-        total_points=total_points
-    )
+@app.route('/admin/reports')
+@admin_required
+def manage_reports():
+    user_reports = Report.query.filter(Report.target_user_id != None).all()
+    product_reports = Report.query.filter(Report.target_product_id != None).all()
+    return render_template('admin_reports.html', user_reports=user_reports, product_reports=product_reports)
+
+@app.route('/admin/reports/delete/user/<int:report_id>', methods=['POST'])
+@admin_required
+def delete_user_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    flash("사용자 신고가 삭제되었습니다.")
+    return redirect(url_for('manage_reports'))
+
+@app.route('/admin/reports/delete/product/<int:report_id>', methods=['POST'])
+@admin_required
+def delete_product_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    flash("상품 신고가 삭제되었습니다.")
+    return redirect(url_for('manage_reports'))
 
 @app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
 @admin_required
@@ -110,7 +163,6 @@ def delete_user(user_id):
     if user.id == session['user_id']:
         flash('자기 자신은 삭제할 수 없습니다.')
         return redirect(url_for('admin_dashboard'))
-
     db.session.delete(user)
     db.session.commit()
     flash(f'사용자 {user.username}가 삭제되었습니다.')
@@ -125,18 +177,37 @@ def delete_product_admin(product_id):
     flash(f'상품 {product.name}이 삭제되었습니다.')
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/dormant/<int:user_id>', methods=['POST'])
+@admin_required
+def mark_user_dormant(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_admin:
+        flash("관리자는 휴면 처리할 수 없습니다.")
+        return redirect(url_for('admin_dashboard'))
+    user.is_dormant = True
+    db.session.commit()
+    flash(f"{user.username} 계정이 휴면 처리되었습니다.")
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/products/new', methods=['GET', 'POST'])
 @login_required
 def create_product():
+    user = User.query.get(session['user_id'])
+    if user.is_dormant:
+        flash("휴면 계정은 상품을 등록할 수 없습니다. 관리자에게 문의하세요.")
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         name = request.form['name']
         description = request.form['description']
-        product = Product(name=name, description=description, seller_id=session['user_id'])
+        product = Product(name=name, description=description, seller_id=user.id)
         db.session.add(product)
         db.session.commit()
         flash('상품이 등록되었습니다.')
         return redirect(url_for('index'))
     return render_template('create_product.html')
+
 
 @app.route('/admin/transactions')
 @admin_required
@@ -156,14 +227,12 @@ def edit_product(product_id):
     product = Product.query.get_or_404(product_id)
     if product.seller_id != session['user_id']:
         abort(403)
-
     if request.method == 'POST':
         product.name = request.form['name']
         product.description = request.form['description']
         db.session.commit()
         flash('상품이 수정되었습니다.')
         return redirect(url_for('product_detail', product_id=product.id))
-
     return render_template('edit_product.html', product=product)
 
 @app.route('/products/<int:product_id>/delete', methods=['POST'])
@@ -172,7 +241,6 @@ def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     if product.seller_id != session['user_id']:
         abort(403)
-
     db.session.delete(product)
     db.session.commit()
     flash('상품이 삭제되었습니다.')
@@ -201,6 +269,18 @@ def chat_history(user_id):
     other_user = User.query.get(user_id)
     return render_template('chat_history.html', chats=chats, other_user=other_user)
 
+@app.route('/chat/room')
+@login_required
+def global_chat():
+    return render_template('chat_room.html', username=session.get('username'))
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    emit('receive_message', {
+        'username': session.get('username'),
+        'message': data['message']
+    }, broadcast=True)
+
 @app.route('/transfer/<int:receiver_id>', methods=['GET', 'POST'])
 @login_required
 def transfer(receiver_id):
@@ -208,7 +288,6 @@ def transfer(receiver_id):
     if receiver.id == session['user_id']:
         flash('자기 자신에게는 송금할 수 없습니다.')
         return redirect(url_for('index'))
-
     if request.method == 'POST':
         amount = int(request.form['amount'])
         if amount <= 0:
@@ -228,23 +307,57 @@ def transaction_history():
     received = Transaction.query.filter_by(receiver_id=session['user_id']).all()
     return render_template('transactions.html', sent=sent, received=received)
 
-# ---------------------- MAIN ----------------------
+@app.route('/report/user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def report_user(user_id):
+    if request.method == 'POST':
+        reason = request.form['reason']
+        report = Report(reporter_id=session['user_id'], target_user_id=user_id, reason=reason)
+        db.session.add(report)
+        db.session.commit()
+        flash('사용자를 신고했습니다.')
+        return redirect(url_for('index'))
+    return render_template('report_form.html')
+
+@app.route('/report/product/<int:product_id>', methods=['GET', 'POST'])
+@login_required
+def report_product(product_id):
+    if request.method == 'POST':
+        reason = request.form['reason']
+        report = Report(reporter_id=session['user_id'], target_product_id=product_id, reason=reason)
+        db.session.add(report)
+        db.session.commit()
+        flash('상품을 신고했습니다.')
+        return redirect(url_for('index'))
+    return render_template('report_form.html')
+
+# ------------------ MAIN ------------------
 if __name__ == '__main__':
-    os.makedirs('certs', exist_ok=True)
-    if not os.path.exists('certs/cert.pem') or not os.path.exists('certs/key.pem'):
-        print("🔐 인증서가 없습니다. openssl로 self-signed 인증서를 생성해주세요.")
-    else:
-        with app.app_context():
-            db.create_all()
+    import gevent.monkey
+    gevent.monkey.patch_all()
 
-            if not User.query.filter_by(username='admin').first():
-                admin_user = User(
-                    username='admin',
-                    password=bcrypt.generate_password_hash('admin').decode('utf-8'),
-                    is_admin=True
-                )
-                db.session.add(admin_user)
-                db.session.commit()
-                print('✅ 관리자 계정(admin / admin)이 생성되었습니다.')
+    with app.app_context():
+        db.create_all()
+        if not User.query.filter_by(username='admin').first():
+            admin_user = User(
+                username='admin',
+                password=bcrypt.generate_password_hash('admin').decode('utf-8'),
+                is_admin=True
+            )
+            db.session.add(admin_user)
+            db.session.commit()
+            print('✅ 관리자 계정(admin / admin)이 생성되었습니다.')
 
-        app.run(ssl_context=('certs/cert.pem', 'certs/key.pem'), debug=True)
+    # gevent를 사용하는 HTTPS 서버 실행
+    from gevent.pywsgi import WSGIServer
+    from geventwebsocket.handler import WebSocketHandler
+
+    http_server = WSGIServer(
+        ('0.0.0.0', 5000),
+        app,
+        keyfile='certs/key.pem',
+        certfile='certs/cert.pem',
+        handler_class=WebSocketHandler
+    )
+    print("🚀 서버 시작: https://localhost:5000")
+    http_server.serve_forever()

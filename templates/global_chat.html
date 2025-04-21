@@ -1,0 +1,45 @@
+{% extends 'base.html' %} {% block title %}전체 채팅{% endblock %} {% block
+content %}
+<h2>💬 전체 채팅방</h2>
+<div
+  id="chat-box"
+  style="
+    border: 1px solid #aaa;
+    padding: 10px;
+    height: 300px;
+    overflow-y: scroll;
+  "
+></div>
+<input
+  type="text"
+  id="message"
+  placeholder="메시지를 입력하세요"
+  style="width: 70%"
+/>
+<button onclick="sendMessage()">전송</button>
+
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  const socket = io()
+  const chatBox = document.getElementById('chat-box')
+
+  socket.on('connect', () => {
+    console.log('Connected to server')
+  })
+
+  socket.on('message', (data) => {
+    const msg = document.createElement('div')
+    msg.innerHTML = `<strong>${data.username}</strong>: ${data.message}`
+    chatBox.appendChild(msg)
+    chatBox.scrollTop = chatBox.scrollHeight
+  })
+
+  function sendMessage() {
+    const msg = document.getElementById('message').value
+    if (msg.trim()) {
+      socket.emit('send_message', { message: msg })
+      document.getElementById('message').value = ''
+    }
+  }
+</script>
+{% endblock %}
