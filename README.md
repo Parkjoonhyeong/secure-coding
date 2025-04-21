@@ -21,36 +21,39 @@
 
 ## 💻 설치 및 실행 방법
 
-### 1. 프로젝트 클론
-
-```bash
-git clone https://github.com/Parkjoonhyeong/secure-coding.git
-cd secure-coding
-```
-
-### 2. 요구 환경
+### 1. 요구 환경
 
 - **Python 3.10 이상**
 - **SQLite3**
 - **Flask**
 - **Flask-Bcrypt**
 - **Flask-SQLAlchemy**
-- 기타 라이브러리는 `requirements.txt`를 참고하세요
+- 기타 라이브러리는 `requirements.txt` 참고
 
+---
+
+### 2. 프로젝트 클론
+
+````bash
+git clone https://github.com/Parkjoonhyeong/secure-coding.git
+cd secure-coding
+
+
+### 3. 가상환경 생성 및 의존성 설치
 ```bash
 python -m venv venv
 venv\Scripts\activate        # macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
-```
+````
 
-### 3. 인증서 생성 (HTTPS + WSS)
+### 4. 인증서 생성 (HTTPS)
 
 ```bash
 mkdir certs
 openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes
 ```
 
-### 4. 실행 방법
+### 5. 실행
 
 ```bash
 python app.py
