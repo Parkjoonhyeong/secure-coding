@@ -6,8 +6,9 @@ content %}
 <ul>
   {% for report in user_reports %}
   <li>
-    📌 신고자: {{ report.reporter.username }} → 대상: {{
-    report.target_user.username }} <br />
+    📌 신고자: {{ report.reporter.username if report.reporter else '알 수 없음'
+    }} → 대상: {{ report.target_user.username if report.target_user else '알 수
+    없음' }}<br />
     📄 사유: {{ report.reason }}
     <form
       method="POST"
@@ -26,9 +27,11 @@ content %}
 <ul>
   {% for report in product_reports %}
   <li>
-    📌 신고자: {{ report.reporter.username }} → 상품: {{
-    report.target_product.name }} (판매자: {{
-    report.target_product.seller.username }}) <br />
+    📌 신고자: {{ report.reporter.username if report.reporter else '알 수 없음'
+    }} → 상품: {{ report.target_product.name if report.target_product else '알
+    수 없음' }} (판매자: {{ report.target_product.seller.username if
+    report.target_product and report.target_product.seller else '알 수 없음'
+    }})<br />
     📄 사유: {{ report.reason }}
     <form
       method="POST"
